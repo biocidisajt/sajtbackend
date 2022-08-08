@@ -37,22 +37,7 @@ const userSchema = new mongoose.Schema(
         about: {
             type: String
         },
-       twitter: {
-            type: String
-        },
-        insta: {
-            type: String
-        },
-        face: {
-            type: String
-        },
-       linkedin: {
-            type: String
-        },
-       website: {
-            type: String
-        },
-       telegram: {
+       pozicija: {
             type: String
         },
         

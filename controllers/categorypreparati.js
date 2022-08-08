@@ -1,5 +1,5 @@
-const Category = require('../models/category');
-const Blog = require('../models/blog');
+const Categorypreparati = require('../models/categorypreparati');
+const Preparati = require('../models/preparati');
 const slugify = require('slugify');
 const { errorHandler } = require('../helpers/dbErrorHandler');
 
@@ -7,9 +7,9 @@ exports.create = (req, res) => {
     const { name,nameEn,nameSp } = req.body;
     let slug = slugify(name).toLowerCase();
 
-    let category = new Category({ name, slug,nameEn,nameSp });
+    let categorypreparati = new Categorypreparati({ name, slug,nameEn,nameSp });
 
-    category.save((err, data) => {
+    categorypreparati.save((err, data) => {
         if (err) {
             return res.status(400).json({
                 error: errorHandler(err)
@@ -20,8 +20,9 @@ exports.create = (req, res) => {
 };
 
 exports.list = (req, res) => {
-    Category.find({})
-    .sort({ createdAt: -1 })
+    Categorypreparati.find({})
+   // .sort({ createdAt: -1 })
+    
     .exec((err, data) => {
         if (err) {
             return res.status(400).json({
@@ -35,7 +36,7 @@ exports.list = (req, res) => {
 
 
 exports.listSpecific = (req, res) => {
-    Category.find({})
+    Categorypreparati.find({})
     .sort({ createdAt: -1 })
     .exec((err, data) => {
         if (err) {
@@ -43,11 +44,11 @@ exports.listSpecific = (req, res) => {
                 error: errorHandler(err)
             });
         }
-        Blog.find({ categories: category })
-            .populate('categories', '_id name slug')
-            .populate('tags', '_id name slug')
+ Preparati.find({ categoriespreparati: categorypreparati })
+            .populate('categoriespreparati', '_id name slug')
+            .populate('tagpreparatis', '_id name slug')
             .populate('postedBy', '_id name imgLink')
-            .select('_id title imgLink slug excerpt excerptSp excerptEn categories postedBy tags createdAt updatedAt')
+            .select('_id title  slug categoriespreparati postedBy tagpreparatis createdAt updatedAt')
             .sort({ createdAt: -1 })
             .exec((err, data) => {
                 if (err) {
@@ -55,7 +56,7 @@ exports.listSpecific = (req, res) => {
                         error: errorHandler(err)
                     });
                 }
-                res.json({ category: category, blogs: data });
+                res.json({ categorypreparati: categorypreparati, preparatis: data });
             });
     });
 };
@@ -65,20 +66,20 @@ exports.listSpecific = (req, res) => {
 exports.read = (req, res) => {
     const slug = req.params.slug.toLowerCase();
 
-    Category.findOne({ slug })
+    Categorypreparati.findOne({ slug })
     .sort({ createdAt: -1 })
-    .exec((err, category) => {
+    .exec((err, categorypreparati) => {
         if (err) {
             return res.status(400).json({
                 error: errorHandler(err)
             });
         }
-        // res.json(category);
-        Blog.find({ categories: category })
-            .populate('categories', '_id name slug')
-            .populate('tags', '_id name slug')
+        // res.json(categorypreparati);
+    Preparati.find({ categoriespreparati: categorypreparati })
+            .populate('categoriespreparati', '_id name slug')
+            .populate('tagpreparatis', '_id name slug')
             .populate('postedBy', '_id name imgLink username')
-            .select('_id title imgLink slug excerpt excerptSp excerptEn titleSp titleEn  categories postedBy tags createdAt updatedAt')
+            .select('_id title  slug  categoriespreparati postedBy tagpreparatis createdAt updatedAt')
             .sort({ createdAt: -1 })
             .exec((err, data) => {
                 if (err) {
@@ -86,7 +87,7 @@ exports.read = (req, res) => {
                         error: errorHandler(err)
                     });
                 }
-                res.json({ category: category, blogs: data });
+                res.json({ categorypreparati: categorypreparati, preparatis: data });
             });
     });
 };
@@ -94,14 +95,14 @@ exports.read = (req, res) => {
 exports.remove = (req, res) => {
     const slug = req.params.slug.toLowerCase();
 
-    Category.findOneAndRemove({ slug }).exec((err, data) => {
+    Categorypreparati.findOneAndRemove({ slug }).exec((err, data) => {
         if (err) {
             return res.status(400).json({
                 error: errorHandler(err)
             });
         }
         res.json({
-            message: 'Category deleted successfully'
+            message: 'Categorypreparati deleted successfully'
         });
     });
 };

@@ -12,6 +12,12 @@ const categorySchema = new mongoose.Schema(
             type: String,
             unique: true,
             index: true
+        },
+        nameSp:{
+            type:String,
+        },
+        nameEn:{
+            type:String,
         }
     },
     { timestamps: true }

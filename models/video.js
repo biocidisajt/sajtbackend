@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema;
 
-const blogSchema = new mongoose.Schema(
+const videoSchema = new mongoose.Schema(
     {
         title: {
             type: String,
@@ -33,48 +33,14 @@ const blogSchema = new mongoose.Schema(
             unique: true,
             index: true
         },
-        bodyLat: {
-            type: {},
-            required: true,
-            min: 200,
-            max: 2000000
+        linkRef:{
+            type:String
         },
-
-        bodyEn: {
-            type: {},
-      
-        },
-
-
-        bodySp: {
-            type: {},
-           
-        },
-
-        excerpt: {
-            type: String,
-            max: 1000
-        },
-        excerptEn: {
-            type: String,
-            max: 1000
-        },
-        excerptSp: {
-            type: String,
-            max: 1000
-        },
-        mtitle: {
-            type: String
-        },
-        mdesc: {
-            type: String
-        },
+  
         photo: {
             data: Buffer,
             contentType: String
         },
-        categories: [{ type: ObjectId, ref: 'Category', required: true }],
-      
 
         postedBy: {
             type: ObjectId,
@@ -84,5 +50,5 @@ const blogSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-module.exports = mongoose.model('Blog', blogSchema);
+module.exports = mongoose.model('Video', videoSchema);
 

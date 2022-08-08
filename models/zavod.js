@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema;
 
-const blogSchema = new mongoose.Schema(
+const zavodSchema = new mongoose.Schema(
     {
         title: {
             type: String,
@@ -73,8 +73,7 @@ const blogSchema = new mongoose.Schema(
             data: Buffer,
             contentType: String
         },
-        categories: [{ type: ObjectId, ref: 'Category', required: true }],
-      
+
 
         postedBy: {
             type: ObjectId,
@@ -84,5 +83,5 @@ const blogSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-module.exports = mongoose.model('Blog', blogSchema);
+module.exports = mongoose.model('Zavod', zavodSchema);
 

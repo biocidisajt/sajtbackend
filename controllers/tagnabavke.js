@@ -1,28 +1,28 @@
-const Tag = require('../models/tag');
-const Galeri = require('../models/galeri');
+const Tagnabavke = require('../models/tagnabavke');
+const Nabavke = require('../models/nabavke');
 const slugify = require('slugify');
 const { errorHandler } = require('../helpers/dbErrorHandler');
 
 exports.create = (req, res) => {
-    const { name ,nameEn,nameSp} = req.body;
+    const { name,nameEn,nameSp } = req.body;
     let slug = slugify(name).toLowerCase();
 
-    let tag = new Tag({ name, slug ,nameEn,nameSp});
+    let tagnabavke = new Tagnabavke({ name, slug,nameEn,nameSp });
 
-    tag.save((err, data) => {
+    tagnabavke.save((err, data) => {
         if (err) {
             console.log(err);
             return res.status(400).json({
                 error: errorHandler(err)
             });
         }
-        res.json(data); // dont do this res.json({ tag: data });
+        res.json(data); // dont do this res.json({ tagnabavke: data });
     });
 };
 
 exports.list = (req, res) => {
-    Tag.find({})
-    .sort({ createdAt: -1 })
+    Tagnabavke.find({})
+   // .sort({ createdAt: -1 })
     .exec((err, data) => {
         if (err) {
             return res.status(400).json({
@@ -36,20 +36,20 @@ exports.list = (req, res) => {
 exports.read = (req, res) => {
     const slug = req.params.slug.toLowerCase();
 
-    Tag.findOne({ slug })
+    Tagnabavke.findOne({ slug })
     .sort({ createdAt: -1 })
-    .exec((err, tag) => {
+    .exec((err, tagnabavke) => {
         if (err) {
             return res.status(400).json({
-                error: 'Tag not found'
+                error: 'Tagnabavke not found'
             });
         }
-        // res.json(tag);
-        Galeri.find({ tags: tag })
-
-            .populate('tags', '_id name slug')
+        // res.json(tagnabavke);
+      Nabavke.find({ tagnabavkes: tagnabavke })
+            .populate('categoriesnabavke', '_id name nameSp nameEn slug')
+            .populate('tagnabavkes', '_id name  nameSp nameEn  slug')
             .populate('postedBy', '_id name username email')
-            .select('_id title slug excerpt categories titleLat titleEn  tags postedBy createdAt updatedAt')
+            .select('_id title slug  titleEn titleSp sifra excerpt categoriesnabavke tagnabavkes postedBy createdAt updatedAt')
             .sort({ createdAt: -1 })
             .exec((err, data) => {
                 if (err) {
@@ -57,7 +57,7 @@ exports.read = (req, res) => {
                         error: errorHandler(err)
                     });
                 }
-                res.json({ tag: tag, galeris: data });
+                res.json({ tagnabavke: tagnabavke, nabavkes: data });
             });
     });
 };
@@ -65,14 +65,14 @@ exports.read = (req, res) => {
 exports.remove = (req, res) => {
     const slug = req.params.slug.toLowerCase();
 
-    Tag.findOneAndRemove({ slug }).exec((err, data) => {
+    Tagnabavke.findOneAndRemove({ slug }).exec((err, data) => {
         if (err) {
             return res.status(400).json({
                 error: errorHandler(err)
             });
         }
         res.json({
-            message: 'Tag deleted successfully'
+            message: 'Tagnabavke deleted successfully'
         });
     });
 };

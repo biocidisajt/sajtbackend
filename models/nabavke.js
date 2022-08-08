@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema;
 
-const blogSchema = new mongoose.Schema(
+const nabavkeSchema = new mongoose.Schema(
     {
         title: {
             type: String,
@@ -33,49 +33,26 @@ const blogSchema = new mongoose.Schema(
             unique: true,
             index: true
         },
-        bodyLat: {
-            type: {},
-            required: true,
-            min: 200,
-            max: 2000000
-        },
-
-        bodyEn: {
-            type: {},
       
-        },
-
-
-        bodySp: {
-            type: {},
-           
-        },
-
-        excerpt: {
-            type: String,
-            max: 1000
-        },
-        excerptEn: {
-            type: String,
-            max: 1000
-        },
-        excerptSp: {
-            type: String,
-            max: 1000
-        },
         mtitle: {
             type: String
         },
-        mdesc: {
+        pocetak: {
             type: String
+        },
+        kraj: {
+            type: String
+        },
+        sifra:{
+            type:String
         },
         photo: {
             data: Buffer,
             contentType: String
         },
-        categories: [{ type: ObjectId, ref: 'Category', required: true }],
-      
-
+        categoriesnabavke: [{ type: ObjectId, ref: 'Categorynabavke', required: true }],
+        tagnabavkes: [{ type: ObjectId, ref: 'Tagnabavke', required: true }],
+  
         postedBy: {
             type: ObjectId,
             ref: 'User'
@@ -84,5 +61,5 @@ const blogSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-module.exports = mongoose.model('Blog', blogSchema);
+module.exports = mongoose.model('Nabavke', nabavkeSchema);
 

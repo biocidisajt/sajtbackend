@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
-const tagSchema = new mongoose.Schema(
+const categorypreparatiSchema = new mongoose.Schema(
     {
         name: {
             type: String,
             trim: true,
             required: true,
-            maxlength: 32
+            max: 32
         },
         slug: {
             type: String,
@@ -23,4 +23,4 @@ const tagSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-module.exports = mongoose.model('Tag', tagSchema);
+module.exports = mongoose.model('Categorypreparati', categorypreparatiSchema);

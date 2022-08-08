@@ -1,6 +1,6 @@
 
-const Blog = require('../models/blog');
-const Category = require('../models/category');
+const Preparati = require('../models/preparati');
+const Categorypreparati = require('../models/categorypreparati');
 
 const User = require('../models/user');
 const formidable = require('formidable');
@@ -18,105 +18,85 @@ exports.create = (req, res) => {
         console.log("fields, files => ", fields, files);
         if (err) {
             return res.status(400).json({
-                error: 'Image could not upload'
+                error: 'FAJL NEMOZE BITI DODAT'
             });
         }
         const photo=files;
 
-        const { title, bodyLat, categories, tags,titleEn,bodyEn,bodySp,titleSp,excerpt,excerptEn,excerptSp } = fields;
+        const { title, categoriespreparati, titleEn,titleSp } = fields;
 
         if (!title || !title.length) {
             return res.status(400).json({
-                error: 'title is required'
+                error: 'NASLOV NA LATINICI JE OBAVEZAN'
             });
         }
-        if (!titleSp || !titleSp.length) {
-            return res.status(400).json({
-                error: 'Naslov na cirilici je obavezan'
-            });
-        }
-        if (!titleEn || !titleEn.length) {
-            return res.status(400).json({
-                error: 'Naslov na engleskom je obavezan'
-            });
-        }
+    
 
-
-        if (!bodyLat || bodyLat.length < 200) {
+     
+        if (!categoriespreparati || categoriespreparati.length === 0) {
             return res.status(400).json({
-                error: 'Content is too short'
-            });
-        }
-
-        if (!categories || categories.length === 0) {
-            return res.status(400).json({
-                error: 'At least one category is required'
+                error: 'BAREM JEDNA KATEGORIJA JE OBAVEZNA'
             });
         }
 
         
           
-        let blog = new Blog();
+        let preparati = new Preparati();
       
-         blog.title = title;
-        blog.titleEn=titleEn;
-        blog.titleSp=titleSp;
-        blog.bodySp = bodySp;
-        blog.bodyEn = bodyEn;
-        blog.bodyLat = bodyLat;
-        blog.excerpt = smartTrim(bodyLat, 260, ' ', ' ...');
-        blog.excerptEn = smartTrim(bodyEn, 260, ' ', ' ...');
-        blog.excerptSp = smartTrim(bodySp, 260, ' ', ' ...');
-        blog.slug = slugify(title).toLowerCase();
-        blog.mtitle = `${title} | ${process.env.APP_NAME}`;
-        blog.mdesc = smartTrim(bodyLat, 120, ' ', ' ...');
-        blog.postedBy = req.auth._id;
-        // categories and tags
-        let arrayOfCategories = categories && categories.split(',');
+         preparati.title = title;
+        preparati.titleEn=titleEn;
+        preparati.titleSp=titleSp;
+   
+        preparati.slug = slugify(title).toLowerCase();
+        preparati.mtitle = `${title} | ${process.env.APP_NAME}`;
   
+        preparati.postedBy = req.auth._id;
+        // categoriespreparati and tags
+        let arrayOfCategoriespreparati = categoriespreparati && categoriespreparati.split(',');
+ 
  
         if (files.photo) {
-            if (files.photo.size > 30000000) {
+            if (files.photo.size > 10000000) {
                 return res.status(400).json({
                     error: 'Image should be less then 1mb in size'
                 });
             }
-            blog.photo.data = fs.readFileSync(files.photo.path);
-            blog.photo.contentType = files.photo.type;
+            preparati.photo.data = fs.readFileSync(files.photo.path);
+            preparati.photo.contentType = files.photo.type;
         }
 
-        blog.save((err, result) => {
+        preparati.save((err, result) => {
             if (err) {
                 return res.status(400).json({
                     error: errorHandler(err)
                 });
             }
             // res.json(result);
-            Blog.findByIdAndUpdate(result._id, { $push: { categories: arrayOfCategories } }, { new: true }).exec(
+            Preparati.findByIdAndUpdate(result._id, { $push: { categoriespreparati: arrayOfCategoriespreparati } }, { new: true }).exec(
                 (err, result) => {
                     if (err) {
                         return res.status(400).json({
                             error: errorHandler(err)
                         });
-                    }  else {
+                    } else {
                                     res.json(result //,files,fields
                                         );
-                                }
-                            }
-                        );
-                  
+                        
+                    }
+                }
+            );
         });
     });
     };
 
-// list, listAllBlogsCategoriesTags, read, remove, update
+// list, listAllpreparatisCategoriespreparatiTags, read, remove, update
 
 exports.list = (req, res) => {
-    Blog.find({})
-        .populate('categories', '_id name slug')
-  
+    Preparati.find({})
+        .populate('categoriespreparati', '_id name slug')
+
         .populate('postedBy', '_id name username')
-        .select('_id title  slug excerpt  titleEn bodyLat titleSp bodyEn bodySp   excerptEn excerptSp   mdesc categories tags postedBy createdAt updatedAt')
+        .select('_id title  slug titleEn titleSp  categoriespreparati postedBy createdAt updatedAt')
         .sort({ createdAt: -1 })
         .exec((err, data) => {
             if (err) {
@@ -128,21 +108,20 @@ exports.list = (req, res) => {
         });
 };
 
-exports.listAllBlogsCategoriesTags = (req, res) => {
+exports.listAllPreparati = (req, res) => {
     let limit = req.body.limit ? parseInt(req.body.limit) : 10000;
     let skip = req.body.skip ? parseInt(req.body.skip) : 0;
 
-    let blogs;
-    let categories;
-    let tags;
+    let preparatis;
+    let categoriespreparati;
 
-    Blog.find({})
-        .populate('categories', '_id name slug')
-        .populate('tags', '_id name slug')
+    Preparati.find({})
+        .populate('categoriespreparati', '_id name slug')
+      
         .populate('postedBy', '_id name username profile')
         .skip(skip)
         .limit(limit)
-        .select('_id title  titleEn bodyLat titleSp bodyEn bodySp slug excerpt  excerptEn excerptSp  mdesc  categories tags postedBy createdAt updatedAt')
+        .select('_id title  titleEn  titleSp  slug desc  categoriespreparati  postedBy createdAt updatedAt')
    
         .sort({ createdAt: -1 })
 
@@ -152,34 +131,34 @@ exports.listAllBlogsCategoriesTags = (req, res) => {
                     error: errorHandler(err)
                 });
             }
-            blogs = data; // blogs
-            // get all categories
-            Category.find({})
-            .sort({ createdAt: -1 })
+            preparatis = data; // preparatis
+            // get all categoriespreparati
+            Categorypreparati.find({})
+        
             .exec((err, c) => {
                 if (err) {
                     return res.json({
                         error: errorHandler(err)
                     });
                 }
-                categories = c; // categories
+                categoriespreparati = c; // categoriespreparati
                 // get all tags
-              
-                    // return all blogs categories tags
-                    res.json({ blogs, categories, tags, size: blogs.length });
-                });
-           
+               
+                    // return all preparatis categoriespreparati tags
+                    res.json({ preparatis, categoriespreparati, size: preparatis.length });
+               
+            });
         });
 };
 
 exports.read = (req, res) => {
     const slug = req.params.slug.toLowerCase();
-    Blog.findOne({ slug })
+    Preparati.findOne({ slug })
         // .select("-photo")
-        .populate('categories', '_id name slug')
+        .populate('categoriespreparati', '_id name slug')
 
         .populate('postedBy', '_id name username')
-        .select('_id title  titleEn bodyLat titleSp bodyEn bodySp exerpt excerptSp excerptEn slug mtitle mdesc categories  postedBy createdAt updatedAt')
+        .select('_id title  titleEn  titleSp  slug mtitle  ecategoriespreparati  postedBy createdAt updatedAt')
         .sort({ createdAt: -1 })
         .exec((err, data) => {
             if (err) {
@@ -193,14 +172,14 @@ exports.read = (req, res) => {
 
 exports.remove = (req, res) => {
     const slug = req.params.slug.toLowerCase();
-    Blog.findOneAndRemove({ slug }).exec((err, data) => {
+    Preparati.findOneAndRemove({ slug }).exec((err, data) => {
         if (err) {
             return res.json({
                 error: errorHandler(err)
             });
         }
         res.json({
-            message: 'Blog deleted successfully'
+            message: 'PREPARAT OBRISAN'
         });
     });
 };
@@ -208,7 +187,7 @@ exports.remove = (req, res) => {
 exports.update = (req, res) => {
     const slug = req.params.slug.toLowerCase();
 
-    Blog.findOne({ slug }).exec((err, oldBlog) => {
+    Preparati.findOne({ slug }).exec((err, oldParati) => {
         if (err) {
             return res.status(400).json({
                 error: errorHandler(err)
@@ -225,46 +204,30 @@ exports.update = (req, res) => {
                 });
             }
 
-            let slugBeforeMerge = oldBlog.slug;
-            oldBlog = _.merge(oldBlog, fields);
-            oldBlog.slug = slugBeforeMerge;
+            let slugBeforeMerge = oldParati.slug;
+            oldParati = _.merge(oldParati, fields);
+            oldParati.slug = slugBeforeMerge;
 
-            const { bodyLat,title, titleEn,bodyEn,bodySp,titleSp, categories, tags } = fields;
+            const { title, titleEn,titleSp, categoriespreparati } = fields;
 
-            if (bodyLat) {
-                oldBlog.excerpt = smartTrim(bodyLat, 260, ' ', ' ...');
-                oldBlog.desc =smartTrim(bodyLat, 120, ' ', ' ...') ;
+           
+            if (categoriespreparati) {
+                oldParati.categoriespreparati = categoriespreparati.split(',');
             }
 
-            if (bodySp) {
-                oldBlog.excerptSp = smartTrim(bodySp, 260, ' ', ' ...');
-               
-            }
-
-
-            if (bodyEn) {
-                oldBlog.excerptEn = smartTrim(bodyEn, 260, ' ', ' ...');
-            
-            }
-
-
-            if (categories) {
-                oldBlog.categories = categories.split(',');
-            }
-
-         
+           
 
             if (files.photo) {
-                if (files.photo.size > 30000000) {
+                if (files.photo.size > 10000000) {
                     return res.status(400).json({
-                        error: 'Image should be less then 3mb in size'
+                        error: 'Image should be less then 1mb in size'
                     });
                 }
-                oldBlog.photo.data = fs.readFileSync(files.photo.path);
-                oldBlog.photo.contentType = files.photo.type;
+                oldParati.photo.data = fs.readFileSync(files.photo.path);
+                oldParati.photo.contentType = files.photo.type;
             }
 
-            oldBlog.save((err, result) => {
+            oldParati.save((err, result) => {
                 if (err) {
                     return res.status(400).json({
                         error: errorHandler(err)
@@ -279,38 +242,37 @@ exports.update = (req, res) => {
 
 exports.photo = (req, res) => {
     const slug = req.params.slug.toLowerCase();
-    Blog.findOne({ slug })
+    Preparati.findOne({ slug })
         .select('photo')
-        .exec((err, blog) => {
-            if (err || !blog) {
+        .exec((err, preparati) => {
+            if (err || !preparati) {
                 return res.status(400).json({
                     error: errorHandler(err)
                 });
             }
-            res.set('Content-Type', blog.photo.contentType);
-            return res.send(blog.photo.data);
+            res.set('Content-Type', preparati.photo.contentType);
+            return res.send(preparati.photo.data);
         });
 };
 
 exports.listRelated = (req, res) => {
-    // console.log(req.bodyLat.blog);
+    // console.log(req.bodyLat.preparati);
     let limit = req.body.limit ? parseInt(req.body.limit) : 3;
-    const { _id, categories } = req.body.blog;
+    const { _id, categoriespreparati } = req.body.preparati;
 
-    Blog.find({ _id: { $ne: _id }, categories: { $in: categories } })
+    Preparati.find({ _id: { $ne: _id }, categoriespreparati: { $in: categoriespreparati } })
         .limit(limit)
-       // .populate('categories', '_id name slug')
-        .populate('postedBy', '_id name username profile category categories')
-        .select('title slug excerpt excerptEn excerptSp postedBy titleSp titleEn mdesc createdAt updatedAt category categories')
+       // .populate('categoriespreparati', '_id name slug')
+        .populate('postedBy', '_id name username profile categorypreparati categoriespreparati')
+        .select('title slug excerpt excerptEn excerptSp postedBy mdesc createdAt updatedAt categorypreparati categoriespreparati')
         .sort({ createdAt: -1 })
-        .exec((err, blogs) => {
+        .exec((err, preparatis) => {
             if (err) {
                 return res.status(400).json({
-                    error: 'Blogs not found'
+                    error: 'preparatis not found'
                 });
-
             }
-            res.json(blogs);
+            res.json(preparatis);
         });
 };
 
@@ -319,18 +281,18 @@ exports.listSearch = (req, res) => {
     console.log(req.query);
     const { search } = req.query;
     if (search) {
-        Blog.find(
+        Preparati.find(
             {
                 $or: [{ title: { $regex: search, $options: 'i' } }//, { bodyLat: { $regex: search, $options: 'i' } }
             ]
             },
-            (err, blogs) => {
+            (err, preparatis) => {
                 if (err) {
                     return res.status(400).json({
                         error: errorHandler(err)
                     });
                 }
-                res.json(blogs);
+                res.json(preparatis);
             }
         ).sort({ createdAt: -1 })
         .select('-photo -bodyLat ');
@@ -342,18 +304,18 @@ exports.listSearchAll = (req, res) => {
     console.log(req.query);
     const { search } = req.query;
     if (search) {
-        Blog.find(
+        Preparati.find(
             {
                 $or: [{ title: { $regex: search, $options: 'i' } }, { bodyLat: { $regex: search, $options: 'i' } }
             ]
             },
-            (err, blogs) => {
+            (err, preparatis) => {
                 if (err) {
                     return res.status(400).json({
                         error: errorHandler(err)
                     });
                 }
-                res.json(blogs);
+                res.json(preparatis);
             }
         ).sort({ createdAt: -1 })
         .select('-photo -bodyLat ');
@@ -369,8 +331,8 @@ exports.listByUser = (req, res) => {
             });
         }
         let userId = user._id;
-        Blog.find({ postedBy: userId })
-            .populate('categories', '_id name slug')
+        Preparati.find({ postedBy: userId })
+            .populate('categoriespreparati', '_id name slug')
             .populate('tags', '_id name slug')
             .populate('postedBy', '_id name username')
             .select('_id title   slug  postedBy createdAt updatedAt')

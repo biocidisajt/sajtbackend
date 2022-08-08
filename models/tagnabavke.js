@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const tagSchema = new mongoose.Schema(
+const tagnabavkeSchema = new mongoose.Schema(
     {
         name: {
             type: String,
@@ -23,4 +23,4 @@ const tagSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-module.exports = mongoose.model('Tag', tagSchema);
+module.exports = mongoose.model('Tagnabavke', tagnabavkeSchema);

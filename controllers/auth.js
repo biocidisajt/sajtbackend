@@ -2,15 +2,30 @@ const User = require('../models/user');
 const { sendEmailWithNodemailer } = require("../helpers/email");
 const Add=require('../models/recommended');
 const Blog = require('../models/blog');
-
+const Nabavke=require('../models/nabavke');
+const Logo = require('../models/logo');
+const Video = require('../models/video');
+const Galeri =require('../models/galeri')
+const Standardi= require('../models/standardi');
+const Laboratori = require('../models/laboratori');
+const Zavod=require('../models/zavod');
+const Delatnosti =require('../models/delatnosti');
 const shortId = require('shortid');
 const jwt = require('jsonwebtoken');
-const expressJwt = require('express-jwt');
+const {expressjwt} = require('express-jwt');
 const { errorHandler } = require('../helpers/dbErrorHandler');
 const _ = require('lodash');
 const { OAuth2Client } = require('google-auth-library');
+const Pin= require('../models/pin');
 // sendgrid
 const sgMail = require('@sendgrid/mail'); // SENDGRID_API_KEY
+
+const Preparati = require('../models/preparati');
+const Zaposlenje = require('../models/zaposlenje');
+const Cenovnik = require('../models/cenovnik');
+const Ostalo = require('../models/ostalo');
+const Dokument = require('../models/dokument');
+
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.preSignup = (req, res) => {
@@ -26,21 +41,21 @@ exports.preSignup = (req, res) => {
                 error: ' '
             });
         }
-        const token = jwt.sign({ name, email, password }, process.env.JWT_ACCOUNT_ACTIVATION, { expiresIn: '10m' });
+        const token = jwt.sign({ name, email, password }, process.env.JWT_ACCOUNT_ACTIVATION, { expiresIn: '15m' });
 
         const emailData = {
-            from: process.env.EMAIL_FROM,
-            to: 'proofofpiggy@gmail.com',
-            subject: `Account activation link`,
+            from:'ZAVOD ZA BIOCIDE I MEDICINSKU EKOLOGIJU',
+            to: 'zavod.zbme@gmail.com',
+            subject: `Link za aktivaciju naloga`,
             html: `
-            <p>Please use the following link to activate your acccount:</p>
-            <p>Your mail: ${email}</p>
-            <p>Your name: ${name}</p>
+            <p>Klikom na link aktivirajte vaš nalog:</p>
+            <p>Ime i prezime: ${email}</p>
+            <p>Email: ${name}</p>
             <p>${process.env.CLIENT_URL}/auth/account/activate/${token}</p>
             <hr />
-            <p>This email may contain sensetive information</p>
-            <p> If you have not sent a registration request please ignore this email </p>
-            <p>https://proofofpiggy.com</p>
+            <p>Ovaj email možda sadrži osetljive informacije</p>
+            <p>Ako vi niste poslali zahtev za registraciju molimo vas ignorišite ovaj email </p>
+            <p>https://biocidi.org.rs</p>
         `
         };
 
@@ -86,7 +101,7 @@ exports.signup = (req, res) => {
         jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION, function(error, decoded) {
             if (error) {
                 return res.status(401).json({
-                    error: 'Expired link. Signup again'
+                    error: 'Link je istekao, molimo vas prijavite se ponovo.'
                 });
             }
 
@@ -103,13 +118,13 @@ exports.signup = (req, res) => {
                     });
                 }
                 return res.json({
-                    message: 'Singup success! Please signin'
+                    message: 'Uspešno ste se registrovali! Molimo vas prijavite se.'
                 });
             });
         });
     } else {
         return res.json({
-            message: 'Something went wrong. Try again'
+            message: 'Došlo je do greške, molimo pokušajte ponovo.'
         });
     }
 };
@@ -119,17 +134,17 @@ exports.signin = (req, res) => {
     User.findOne({ email }).exec((err, user) => {
         if (err || !user) {
             return res.status(400).json({
-                error: 'User with that email does not exist. Please signup.'
+                error: 'Korisnik sa tim emailom ne postoji. Molimo registrujte se.'
             });
         }
         // authenticate
         if (!user.authenticate(password)) {
             return res.status(400).json({
-                error: 'Email and password do not match.'
+                error: 'Email i lozinka se ne poklapaju.'
             });
         }
         // generate a token and send to client
-        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '3d' });
 
         res.cookie('token', token, { expiresIn: '1d' });
         const { _id, username, name, email, role } = user;
@@ -147,7 +162,7 @@ exports.signout = (req, res) => {
     });
 };
 
-exports.requireSignin = expressJwt({
+exports.requireSignin = expressjwt({
     secret: process.env.JWT_SECRET,
     algorithms: ["HS256"], // added later
     userProperty: "auth",
@@ -197,12 +212,140 @@ exports.canUpdateDeleteBlog = (req, res, next) => {
         let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
         if (!authorizedUser) {
             return res.status(400).json({
-                error: 'You are not authorized'
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
             });
         }
         next();
     });
 };
+exports.canUpdateDeleteGalery= (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+   Galeri.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+exports.canUpdateDeleteVideo= (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+  Video.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
+
+exports.canUpdateDeleteCenovnik = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+    Cenovnik.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
+
+
+exports.canUpdateDeletePreparati = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+    Preparati.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+exports.canUpdateDeleteDokument = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+ Dokument.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
+
+exports.canUpdateDeleteOatalo = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+  Ostalo.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
+exports.canUpdateDeleteNabavke = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+ Nabavke.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
 
 exports.canUpdateDeleteAdd = (req, res, next) => {
     const slug = req.params.slug.toLowerCase();
@@ -215,12 +358,143 @@ exports.canUpdateDeleteAdd = (req, res, next) => {
         let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
         if (!authorizedUser) {
             return res.status(400).json({
-                error: 'You are not authorized'
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
             });
         }
         next();
     });
 };
+
+exports.canUpdateDeleteLaboratori = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+    Laboratori.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
+exports.canUpdateDeleteZaposlenje = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+  Zaposlenje.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
+
+exports.canUpdateDeleteLogo = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+    Logo.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+exports.canUpdateDeleteStandard = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+    Standardi.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
+
+
+
+exports.canUpdateDeleteZavod = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+   Zavod.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
+
+exports.canUpdateDeleteDelatnost = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+   Delatnosti.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
+exports.canUpdateDeletePin = (req, res, next) => {
+    const slug = req.params.slug.toLowerCase();
+   Pin.findOne({ slug }).exec((err, data) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+        if (!authorizedUser) {
+            return res.status(400).json({
+                error: 'Niste ovlašćeni da menjate ovaj sadržaj!'
+            });
+        }
+        next();
+    });
+};
+
 
 
 
@@ -231,23 +505,24 @@ exports.forgotPassword = (req, res) => {
     User.findOne({ email }, (err, user) => {
         if (err || !user) {
             return res.status(401).json({
-                error: 'User with that email does not exist'
+                error: 'Korisnik sa tim emailom ne postoji'
             });
         }
 
-        const token = jwt.sign({ _id: user._id }, process.env.JWT_RESET_PASSWORD, { expiresIn: '10m' });
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_RESET_PASSWORD, { expiresIn: '10m' }
+        );
 
         // email
         const emailData = {
             from: process.env.EMAIL_FROM,
             to: email,
-            subject: `Password reset link`,
+            subject: `Link za resetovanje lozinke`,
             html: `
-            <p>Please use the following link to reset your password:</p>
+            <p>Koristite sledeći link da biste resetovali lozinku:</p>
             <p>${process.env.CLIENT_URL}/auth/password/reset/${token}</p>
             <hr />
-            <p>This email may contain sensetive information</p>
-            <p>https://proofofpiggy.com</p>
+            <p>Ovaj email može da sadrži osetljive informacije</p>
+            <p>https://biocidi.org.rs</p>
         `
         };
         // populating the db > user > resetPasswordLink

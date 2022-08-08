@@ -12,6 +12,7 @@ const {
     listSearch,
     listByUser,listSearchAll
 } = require('../controllers/blog');
+const {listSearchWeb}=require('../controllers/search');
 
 const { requireSignin, adminMiddleware, authMiddleware, canUpdateDeleteBlog } = require('../controllers/auth');
 
@@ -22,10 +23,11 @@ router.post('/blogs-categories-tags', listAllBlogsCategoriesTags);
 router.get('/blog/:slug', read);
 router.delete('/blog/:slug', requireSignin, adminMiddleware, remove);
 router.put('/blog/:slug', requireSignin, adminMiddleware, update);
-router.get('/blog/photo/:slug', photo);
+router.get('/blog/fotografija/:slug', photo);
 router.post('/blogs/related', listRelated);
 router.get('/blogs/search', listSearch);
 router.get('/blogs/searchall', listSearchAll);
+router.get('/blogs/searchweb',listSearchWeb);
 
 // auth user blog crud
 router.post('/user/blog', requireSignin, authMiddleware, create);
